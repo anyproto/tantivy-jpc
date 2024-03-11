@@ -36,6 +36,7 @@ pub mod tsession_query_parser;
 pub mod tsession_schema;
 pub mod tsession_searcher;
 pub mod tsession_tests;
+mod common_tests;
 
 pub use self::tokenizer::*;
 pub use self::tsession_builder::*;
@@ -48,7 +49,7 @@ pub use self::tsession_tests::*;
 // conversation based on the TantivySession::id.
 struct TantivySession {
     pub(crate) id: String,
-    pub(crate) doc: Option<HashMap<usize, tantivy::Document>>,
+    pub(crate) doc: Option<HashMap<usize, tantivy::TantivyDocument>>,
     pub(crate) builder: Option<Box<tantivy::schema::SchemaBuilder>>,
     pub(crate) schema: Option<tantivy::schema::Schema>,
     pub(crate) index: Option<Box<tantivy::Index>>,
@@ -112,6 +113,12 @@ impl TantivySession {
         debug!("In do_method");
         match obj {
             "query_parser" => {
+                if let Err(e) = self.handle_query_parser(method, params) {
+                    self.make_json_error(&format!("handle query parser error={e}"));
+                    return -1;
+                };
+            }
+            "num_parser" => {
                 if let Err(e) = self.handle_query_parser(method, params) {
                     self.make_json_error(&format!("handle query parser error={e}"));
                     return -1;
@@ -500,10 +507,10 @@ pub unsafe extern "C" fn tantivy_jpc(
                     let tokenizer_manager = TokenizerManager::default();
                     tokenizer_manager.register(
                         "en_stem_with_stop_words",
-                        TextAnalyzer::builder(SimpleTokenizer)
+                        TextAnalyzer::builder(SimpleTokenizer::default())
                             .filter(RemoveLongFilter::limit(40))
                             .filter(LowerCaser)
-                            .filter(stops.clone())
+                            //.filter(stops.clone())
                             .filter(Stemmer::new(Language::English))
                             .build(),
                     );

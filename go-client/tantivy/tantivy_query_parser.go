@@ -24,6 +24,17 @@ func (qp *TQueryParser) ParseQuery(query string) (*TSearcher, error) {
 	return &TSearcher{qp}, nil
 }
 
+func (qp *TQueryParser) PrepareQuery(spaceId, query string) (*TSearcher, error) {
+	_, err := qp.callTantivy("query_parser", "prepare_query", msi{
+		"query":    query,
+		"space_id": spaceId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &TSearcher{qp}, nil
+}
+
 func (qp *TQueryParser) ParseFuzzyQuery(field, term string) (*TSearcher, error) {
 	_, err := qp.callTantivy("query_parser", "parse_fuzzy_query", msi{
 		"term":  []string{term},

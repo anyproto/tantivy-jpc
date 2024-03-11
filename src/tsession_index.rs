@@ -11,6 +11,7 @@ use serde_json::json;
 use tantivy::schema::FieldType;
 use tantivy::DateTime;
 use tantivy::Term;
+use tantivy::tokenizer::{LowerCaser, RawTokenizer, TextAnalyzer};
 
 pub const DEFAULT_INDEX_WRITER_MEM_SIZE: u64 = 500000000;
 
@@ -44,6 +45,10 @@ impl TantivySession {
                 ))
             }
         };
+
+        let regex_tokenizer = TextAnalyzer::builder(RawTokenizer::default())
+            .filter(LowerCaser)
+            .build();
 
         let filename_tokenizer = match tm.get("filename") {
             Some(t) => t,
@@ -79,6 +84,7 @@ impl TantivySession {
                 }
             };
             idx.tokenizers().register("en_stem_with_stop_words", default_tokenizer);
+            idx.tokenizers().register("regex", regex_tokenizer);
             idx.tokenizers().register("filename", filename_tokenizer);
             Ok(Box::new(idx))
         } else {
@@ -99,6 +105,7 @@ impl TantivySession {
                 .ok_or_else(|| ErrorKinds::Other("failed to clone index".to_string()))?;
 
             r.tokenizers().register("en_stem_with_stop_words", default_tokenizer);
+            r.tokenizers().register("regex", regex_tokenizer);
             r.tokenizers().register("filename", filename_tokenizer);
             Ok(r)
         }
@@ -340,7 +347,7 @@ impl TantivySession {
                     debug!("got index reader@@@@@@");
                     match (*idx)
                         .clone()
-                        .reload_policy(tantivy::ReloadPolicy::OnCommit)
+                        .reload_policy(tantivy::ReloadPolicy::OnCommitWithDelay)
                         .try_into()
                     {
                         Ok(idx_read) => {

@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  myapp:
+    build:
+      context: .
+    platform: linux/amd64
+    volumes:
+      - /Users/mikhailyudin/GolandProjects/tantivy-jpc/:/opt/tantivy-jpc
+      - /Users/mikhailyudin/GolandProjects/musl-cross-make/:/opt/musl-cross-make
+    command: tail -f /dev/null
+    user: 501:501
+    environment:
+      - HOME=/home/mikhailyudin
+    working_dir: /home/mikhailyudin

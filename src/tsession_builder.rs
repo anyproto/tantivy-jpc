@@ -1,3 +1,4 @@
+use std::ptr::null;
 use crate::debug;
 use crate::make_internal_json_error;
 use crate::ErrorKinds;
@@ -7,6 +8,7 @@ use crate::TantivySession;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
+
 use serde_json::json;
 use tantivy::schema::{
     IndexRecordOption, JsonObjectOptions, NumericOptions, Schema, TextFieldIndexing, TextOptions,
@@ -55,7 +57,7 @@ impl TantivySession {
             None => {
                 return make_internal_json_error(ErrorKinds::BadParams(
                     "parameters are not a json object".to_string(),
-                ))
+                ));
             }
         };
         let name = match m.get("name") {
@@ -65,7 +67,7 @@ impl TantivySession {
             None => {
                 return make_internal_json_error(ErrorKinds::BadParams(
                     "name param not found".to_string(),
-                ))
+                ));
             }
         };
         let field_type = match m.get("type") {
@@ -74,13 +76,13 @@ impl TantivySession {
                 None => {
                     return make_internal_json_error(ErrorKinds::BadParams(
                         "field type must be either 1 or 2 for STRING or TEXT".to_string(),
-                    ))
+                    ));
                 }
             },
             None => {
                 return make_internal_json_error(ErrorKinds::BadParams(
                     "type must be specified".to_string(),
-                ))
+                ));
             }
         };
         let stored = match m.get("stored") {
@@ -89,7 +91,7 @@ impl TantivySession {
                 None => {
                     return make_internal_json_error(ErrorKinds::BadParams(
                         "field stored must be true or false".to_string(),
-                    ))
+                    ));
                 }
             },
             None => false,
@@ -100,7 +102,7 @@ impl TantivySession {
                 None => {
                     return make_internal_json_error(ErrorKinds::BadParams(
                         "field indexed must be true or false".to_string(),
-                    ))
+                    ));
                 }
             },
             None => false,
@@ -124,7 +126,7 @@ impl TantivySession {
                 None => {
                     return make_internal_json_error(ErrorKinds::BadParams(
                         "basic must be set to true or false".to_string(),
-                    ))
+                    ));
                 }
             },
             None => false,
@@ -171,7 +173,7 @@ impl TantivySession {
                     _ => {
                         return make_internal_json_error(ErrorKinds::BadParams(
                             "index must be a boolean value".to_string(),
-                        ))
+                        ));
                     }
                 };
                 if field_params.stored {
@@ -188,9 +190,14 @@ impl TantivySession {
                             .set_tokenizer(&field_params.tokenizer)
                             .set_index_option(options),
                     );
+                } else {
+                    ti = ti.set_indexing_options(
+                        TextFieldIndexing::default()
+                            .set_tokenizer("regex")
+                    );
                 }
                 if field_params.fast {
-                    ti = ti.set_fast();
+                    ti = ti.set_fast(None);
                 }
 
                 debug!(
@@ -232,7 +239,7 @@ impl TantivySession {
                     None => {
                         return make_internal_json_error(ErrorKinds::BadInitialization(
                             "schema_builder not created".to_string(),
-                        ))
+                        ));
                     }
                 };
                 let schema: Schema = sb.build();

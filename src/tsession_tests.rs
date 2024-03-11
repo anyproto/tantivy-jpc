@@ -11,7 +11,7 @@ use scopeguard::defer;
 pub mod tests {
     extern crate tempdir;
 
-    use tantivy::schema::FieldEntry;
+    use tantivy::schema::{FieldEntry, Value};
     use tempdir::TempDir;
     use uuid::Uuid;
 
@@ -636,8 +636,8 @@ pub mod tests {
         let sres = &searcher.search(1, true, vec![]).unwrap();
         let title_result: Vec<ResultElement> = serde_json::from_str(sres).unwrap();
         assert_eq!(
-            title_result[0].doc.0.get("title").unwrap()[0]
-                .as_text()
+            title_result[0].doc.0.get("title").unwrap()[0].as_ref()
+                .as_str()
                 .unwrap(),
             "The Old Man and the Sea".to_string()
         );
@@ -719,7 +719,8 @@ pub mod tests {
         let title_result: Vec<ResultElement> = serde_json::from_str(sres).unwrap();
         assert_eq!(
             title_result[0].doc.0.get("title").unwrap()[0]
-                .as_text()
+                .as_ref()
+                .as_str()
                 .unwrap(),
             "The Old Man and the Sea".to_string()
         );
@@ -802,7 +803,8 @@ pub mod tests {
         let title_result: Vec<ResultElement> = serde_json::from_str(sres).unwrap();
         assert_eq!(
             title_result[0].doc.0.get("title").unwrap()[0]
-                .as_text()
+                .as_ref()
+                .as_str()
                 .unwrap(),
             "Of Mice and Men".to_string()
         );
@@ -1283,7 +1285,8 @@ pub mod tests {
         let title_result: Vec<ResultElement> = serde_json::from_str(sres).unwrap();
         assert_eq!(
             title_result[0].doc.0.get("title").unwrap()[0]
-                .as_text()
+                .as_ref()
+                .as_str()
                 .unwrap(),
             "The Old Man and the Sea".to_string()
         );
@@ -1665,7 +1668,8 @@ pub mod tests {
         let title_result: Vec<ResultElement> = serde_json::from_str(sres).unwrap();
         assert_eq!(
             title_result[0].doc.0.get("title").unwrap()[0]
-                .as_text()
+                .as_ref()
+                .as_str()
                 .unwrap(),
             "abc Hello1989World test".to_string()
         );

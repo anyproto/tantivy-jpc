@@ -1,11 +1,16 @@
 package tantivy
 
-// #cgo linux,amd64 LDFLAGS:-L${SRCDIR}/packaged/lib/linux-amd64
-// #cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/packaged/lib/darwin-amd64
-// #cgo darwin,arm64 LDFLAGS:-L${SRCDIR}/packaged/lib/darwin-aarch64
+// #cgo windows,amd64 LDFLAGS:-L${SRCDIR}/packaged/lib/windows-amd64 -ltantivy_jpc -lm -pthread -lws2_32 -lbcrypt -lwsock32 -lntdll -luserenv -lsynchronization
+// #cgo darwin,amd64 LDFLAGS:-L${SRCDIR}/packaged/lib/darwin-amd64 -ltantivy_jpc -lm -pthread -framework CoreFoundation -framework Security -ldl
+// #cgo darwin,arm64 LDFLAGS:-L${SRCDIR}/packaged/lib/darwin-aarch64 -ltantivy_jpc -lm -pthread -ldl
+// #cgo ios,arm64 LDFLAGS:-L${SRCDIR}/packaged/lib/ios-aarch64 -ltantivy_jpc -lm -pthread -ldl
+// #cgo ios,amd64 LDFLAGS:-L${SRCDIR}/packaged/lib/ios-amd64 -ltantivy_jpc -lm -pthread -ldl
+// #cgo android,arm LDFLAGS:-L${SRCDIR}/packaged/lib/android-arm -ltantivy_jpc -lm -ldl
+// #cgo android,386 LDFLAGS:-L${SRCDIR}/packaged/lib/android-x86 -ltantivy_jpc -lm -ldl
+// #cgo android,amd64 LDFLAGS:-L${SRCDIR}/packaged/lib/android-amd64 -ltantivy_jpc -lm -ldl
+// #cgo android,arm64 LDFLAGS:-L${SRCDIR}/packaged/lib/android-arm64 -ltantivy_jpc -lm -ldl
 // #cgo CFLAGS: -I${SRCDIR}/packaged/include
-// #cgo LDFLAGS: -ltantivy_jpc -lm -ldl -pthread
-// #cgo linux,amd64 LDFLAGS: -Wl,--allow-multiple-definition
+// #cgo linux,amd64,!android LDFLAGS:-L${SRCDIR}/packaged/lib/linux-amd64 -Wl,--allow-multiple-definition -ltantivy_jpc -lm -pthread -lpthread
 //
 // #include "tantivy-jpc.h"
 // #include <stdlib.h>
@@ -76,8 +81,8 @@ func (jpc *JPCId) callTantivy(object, method string, params msi) (string, error)
 	pcJPCParams := C.CString(sb)
 	pCDesctination := (*C.uchar)(unsafe.Pointer(pcomsBuf))
 	cJPCParams := (*C.uchar)(unsafe.Pointer(pcJPCParams))
-	pDestinationLen := (*C.ulong)(unsafe.Pointer(&blen))
-	ttret := C.tantivy_jpc(cJPCParams, C.ulong(uint64(len(sb))), &pCDesctination, pDestinationLen)
+	pDestinationLen := (*pointerCType)(unsafe.Pointer(&blen))
+	ttret := C.tantivy_jpc(cJPCParams, pointerCType(pointerGoType(len(sb))), &pCDesctination, pDestinationLen)
 	if ttret < 0 {
 		return "", errors.E("Tantivy JPC Failed", errors.K.Invalid, "desc", string(C.GoBytes(unsafe.Pointer(pCDesctination), C.int(*pDestinationLen))))
 	}

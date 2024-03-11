@@ -12,29 +12,29 @@ extern crate serde_json;
 
 use serde_json::json;
 use tantivy::schema::Field;
-use tantivy::Document;
+use tantivy::{Document, TantivyDocument};
 
-fn string_val(v: serde_json::Value) -> tantivy::schema::Value {
-    tantivy::schema::Value::Str(v.as_str().unwrap_or("empty").to_string())
+fn string_val(v: serde_json::Value) -> tantivy::schema::OwnedValue {
+    tantivy::schema::OwnedValue::Str(v.as_str().unwrap_or("empty").to_string())
 }
 
-fn json_val(v: serde_json::Value) -> tantivy::schema::Value {
-    tantivy::schema::Value::JsonObject(v.as_object().unwrap_or(&serde_json::Map::new()).clone())
+fn json_val(v: serde_json::Value) -> tantivy::schema::OwnedValue {
+    tantivy::schema::OwnedValue::from(v.as_object().unwrap_or(&serde_json::Map::new()).clone())
 }
 
-fn int_val(v: serde_json::Value) -> tantivy::schema::Value {
-    tantivy::schema::Value::I64(v.as_i64().unwrap_or(0))
+fn int_val(v: serde_json::Value) -> tantivy::schema::OwnedValue {
+    tantivy::schema::OwnedValue::I64(v.as_i64().unwrap_or(0))
 }
 
-fn uint_val(v: serde_json::Value) -> tantivy::schema::Value {
-    tantivy::schema::Value::U64(v.as_u64().unwrap_or(0))
+fn uint_val(v: serde_json::Value) -> tantivy::schema::OwnedValue {
+    tantivy::schema::OwnedValue::U64(v.as_u64().unwrap_or(0))
 }
 
 impl TantivySession {
     fn handle_add_field(
         &mut self,
         params: serde_json::Value,
-        func: fn(v: serde_json::Value) -> tantivy::schema::Value,
+        func: fn(v: serde_json::Value) -> tantivy::schema::OwnedValue,
     ) -> InternalCallResult<u32> {
         let doc = self.doc.as_mut();
         let d = match doc {
@@ -145,12 +145,12 @@ impl TantivySession {
                 match doc {
                     Some(x) => {
                         let l = x.len();
-                        x.insert(l, Document::default());
+                        x.insert(l, TantivyDocument::default());
                         length = x.len();
                     }
                     None => {
-                        let nd = Document::default();
-                        let mut hm = HashMap::<usize, Document>::new();
+                        let nd = TantivyDocument::default();
+                        let mut hm = HashMap::<usize, TantivyDocument>::new();
                         hm.insert(0, nd);
                         self.doc = Some(hm);
                         length = 1;
