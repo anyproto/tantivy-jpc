@@ -13,27 +13,38 @@ import (
 )
 
 func DoRun() {
-	tantivy.LibInit("debug")
+	tantivy.LibInit("release")
 	builder, err := tantivy.NewBuilder("/Users/mikhailyudin/GolandProjects/tantivy-jpc/go-client/examples/tmpdir")
 	if err != nil {
 		panic(err)
 	}
-	idxFieldTitle, err := builder.AddTextField("title", tantivy.TEXT, true, true, "", false)
+
+	idxMyIdId, err := builder.AddTextField("Id", tantivy.TEXT, true, true, "", false)
 	if err != nil {
 		panic(err)
 	}
 
-	idxFieldBody, err := builder.AddTextField("body", tantivy.TEXT, true, true, "", false)
+	idxFieldSpaceId, err := builder.AddTextField("SpaceID", tantivy.TEXT, true, true, "", false)
 	if err != nil {
 		panic(err)
 	}
 
-	idxMyIdId, err := builder.AddTextField("myId", tantivy.TEXT, true, true, "", false)
+	idxFieldTitle, err := builder.AddTextField("Title", tantivy.TEXT, true, true, "", false)
 	if err != nil {
 		panic(err)
 	}
 
-	idxFieldSpaceId, err := builder.AddTextField("spaceId", tantivy.TEXT, true, true, "", false)
+	idxFieldTitleNoTerms, err := builder.AddTextField("TitleNoTerms", tantivy.TEXT, true, true, "", false)
+	if err != nil {
+		panic(err)
+	}
+
+	idxFieldText, err := builder.AddTextField("Text", tantivy.TEXT, true, true, "", false)
+	if err != nil {
+		panic(err)
+	}
+
+	idxFieldTextNoTerms, err := builder.AddTextField("TextNoTerms", tantivy.TEXT, true, true, "", false)
 	if err != nil {
 		panic(err)
 	}
@@ -55,8 +66,8 @@ func DoRun() {
 	start := time.Now().UnixMilli()
 	//var docs []SearchDoc
 	startReportMemory()
-	fmt.Println(idxFieldTitle, idxFieldBody, idxFieldSpaceId, idxMyIdId)
-	idw, err := addDocs(doc, idxFieldTitle, idxFieldBody, idxFieldSpaceId, idxMyIdId, err, idx)
+	fmt.Println(idxFieldTitle, idxFieldText, idxFieldSpaceId, idxMyIdId, idxFieldTitleNoTerms, idxFieldTextNoTerms)
+	idw, err := addDocs(doc, idxFieldTitle, idxFieldText, idxFieldSpaceId, idxMyIdId, idxFieldTitleNoTerms, idxFieldTextNoTerms, err, idx)
 	//idw, err := add1DocMb(doc, idxFieldTitle, idxFieldBody, idxFieldSpaceId, idxFieldOrder, err, idx)
 
 	_, err = idw.Commit()
@@ -75,7 +86,7 @@ func DoRun() {
 		panic(err)
 	}
 
-	_, err = qp.ForIndex([]string{"title", "body"})
+	_, err = qp.ForIndex([]string{"Title", "Text"})
 	if err != nil {
 		panic(err)
 	}
@@ -96,7 +107,7 @@ func DoRun() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("search result", sr[0]["doc"].(map[string]interface{})["myId"].([]interface{})[0])
+	fmt.Println("search result", sr[0]["doc"].(map[string]interface{})["Id"].([]interface{})[0])
 	//if sr[0]["doc"].(map[string]interface{})["title"].([]interface{})[0] != "The Old Man and the Sea" {
 	//	panic("expected value not received")
 	//}
@@ -125,9 +136,13 @@ func DoRun() {
 
 }
 
-func addDocs(doc *tantivy.TDocument, idxFieldTitle int, idxFieldBody int, idxFieldSpaceId int, idxMyIdId int, err error, idx *tantivy.TIndex) (*tantivy.TIndexWriter, error) {
+func addDocs(doc *tantivy.TDocument,
+	idxFieldTitle int, idxFieldBody int, idxFieldSpaceId int, idxMyIdId int,
+	idxFieldTitleNoTerms int, idxFieldTextNoTerms int,
+	err error,
+	idx *tantivy.TIndex) (*tantivy.TIndexWriter, error) {
 	for i := 1; i <= 1; i++ {
-		for i := 1; i <= 100; i++ {
+		for i := 1; i <= 100000; i++ {
 			{
 				toAdd, err := doc.Create()
 				if err != nil {
@@ -137,6 +152,8 @@ func addDocs(doc *tantivy.TDocument, idxFieldTitle int, idxFieldBody int, idxFie
 				doc.AddText(idxFieldBody, getRandomString(), toAdd)
 				doc.AddText(idxFieldSpaceId, "spaceId", toAdd)
 				doc.AddText(idxMyIdId, generateRandomString(8), toAdd)
+				doc.AddText(idxFieldTitleNoTerms, "", toAdd)
+				doc.AddText(idxFieldTextNoTerms, "", toAdd)
 			}
 		}
 	}
@@ -146,7 +163,7 @@ func addDocs(doc *tantivy.TDocument, idxFieldTitle int, idxFieldBody int, idxFie
 		panic(err)
 	}
 
-	maxJ := 100
+	maxJ := 100000
 	for i := 0; i <= 0; i++ {
 		for j := 1; j <= maxJ; j++ {
 			{
@@ -196,6 +213,7 @@ func add1DocMb(doc *tantivy.TDocument, idxFieldTitle int, idxFieldBody int, idxF
 
 func main() {
 	DoRun()
+	time.Sleep(1000 * time.Second)
 }
 
 func getRandomString() string {
@@ -237,7 +255,7 @@ func startReportMemory() {
 			var meanCPU float64
 			var maxHeapObjects uint64
 			var m runtime.MemStats
-			times := 10 * 1
+			times := 10000 * 1
 			for {
 				runtime.ReadMemStats(&m)
 				if maxAlloc < m.Alloc {
